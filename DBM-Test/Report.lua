@@ -465,6 +465,10 @@ end
 
 ---@param event TraceEntryEvent
 function reporter:EventToStringForReport(event, indent, subIndent)
+	subIndent = subIndent or 1
+	if subIndent > 20 then
+		return ("\t"):rep(indent) .. "Max recursion depth for report exceeded."
+	end
 	local result = {}
 	local extraLines = {}
 	if event.event == "ScheduleTask" then
@@ -565,14 +569,14 @@ function reporter:EventToStringForReport(event, indent, subIndent)
 		if event.scheduleData.scheduleExecution then
 			for _, v in ipairs(event.scheduleData.scheduleExecution.traces) do
 				if not self:FilterTraceEntry(v, event.scheduleData.scheduleExecution) then
-					extraLines[#extraLines + 1] = self:EventToStringForReport(v, 0, math.max((subIndent or 1) - 1, indent) + 2)
+					extraLines[#extraLines + 1] = self:EventToStringForReport(v, 0, math.max(subIndent - 1, indent) + 2)
 				end
 			end
 		end
 	end
 	local str = event.event .. ": " .. table.concat(result, ", ")
 	if #extraLines > 0 then
-		return ("\t"):rep(indent) .. str .. "\n" .. ("\t"):rep(indent + (subIndent or 1)) .. table.concat(extraLines, "\n" .. ("\t"):rep(indent + (subIndent or 1)))
+		return ("\t"):rep(indent) .. str .. "\n" .. ("\t"):rep(indent + subIndent) .. table.concat(extraLines, "\n" .. ("\t"):rep(indent + subIndent))
 	else
 		return ("\t"):rep(indent) .. str
 	end
